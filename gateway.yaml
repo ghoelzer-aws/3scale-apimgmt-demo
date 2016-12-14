@@ -1,0 +1,141 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    generation: 10
+    labels:
+      app: gateway
+    name: gateway
+  spec:
+    replicas: 1
+    selector:
+      app: gateway
+      deploymentconfig: gateway
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftWebConsole
+        creationTimestamp: null
+        labels:
+          app: gateway
+          deploymentconfig: gateway
+      spec:
+        containers:
+        - env:
+          - name: THREESCALE_PROVIDER_KEY
+            value: 22fb2551cf0083c94eecf234a81ea49d
+          - name: THREESCALE_ADMIN_URL
+            value: https://red-hat-central-msp-admin.3scale.net
+          image: quay.io/3scale/gateway@sha256:88f07bffaf022b9f5e5c11c337e4932b89a2263ce5f4add3302d457c9a6a6cac
+          imagePullPolicy: Always
+          name: gateway
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - gateway
+        from:
+          kind: ImageStreamTag
+          name: gateway:latest
+          namespace: 3scale-apimgmt-demo
+      type: ImageChange
+  status:
+    availableReplicas: 1
+    observedGeneration: 10
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    labels:
+      app: gateway
+    name: gateway
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deploymentconfig: gateway
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      openshift.io/host.generated: "true"
+    creationTimestamp: null
+    labels:
+      app: gateway
+    name: gateway
+  spec:
+    host: gateway-3scale-apimgmt-demo.cloudapps.rhneolabs.com
+    port:
+      targetPort: 8080-tcp
+    to:
+      kind: Service
+      name: gateway
+      weight: 100
+  status:
+    ingress:
+    - conditions:
+      - lastTransitionTime: 2016-10-24T19:24:49Z
+        status: "True"
+        type: Admitted
+      host: gateway-3scale-apimgmt-demo.cloudapps.rhneolabs.com
+      routerName: router
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/image.dockerRepositoryCheck: 2016-10-24T19:24:31Z
+    creationTimestamp: null
+    generation: 2
+    labels:
+      app: gateway
+    name: gateway
+  spec:
+    tags:
+    - annotations:
+        openshift.io/generated-by: OpenShiftWebConsole
+        openshift.io/imported-from: quay.io/3scale/gateway
+      from:
+        kind: DockerImage
+        name: 172.30.203.52:5000/3scale-apimgmt-demo/gateway:latest
+      generation: 2
+      importPolicy: {}
+      name: latest
+  status:
+    dockerImageRepository: ""
+kind: List
+metadata: {}
